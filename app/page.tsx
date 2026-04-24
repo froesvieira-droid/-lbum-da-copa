@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X } from 'lucide-react';
+import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star } from 'lucide-react';
 import { TEAMS, type Team } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -72,6 +72,8 @@ export default function AlbumPage() {
 
   const selectedTeam = TEAMS.find(t => t.id === selectedTeamId) || TEAMS[0];
   const selectedTeamProgress = getTeamProgress(selectedTeam.shortName);
+
+  const isRareSticker = (num: number) => num === 1 || num === 20;
 
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden font-sans relative">
@@ -237,52 +239,94 @@ export default function AlbumPage() {
             {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => {
               const isOwned = owned[`${selectedTeam.shortName}-${num}`];
               const stickerCode = `${selectedTeam.shortName} ${num.toString().padStart(2, '0')}`;
+              const isRare = isRareSticker(num);
               
               return (
                 <button
                   key={num}
                   onClick={() => toggleSticker(selectedTeam.shortName, num)}
                   className={cn(
-                    "aspect-[3/4] rounded-lg shadow-sm relative group flex flex-col transition-all duration-200 text-left cursor-pointer",
+                    "aspect-[3/4] rounded-lg shadow-sm relative group flex flex-col transition-all duration-300 text-left cursor-pointer",
                     isOwned 
-                      ? "bg-white border-2 border-indigo-500 shadow-indigo-100/50 scale-[1.02]" 
-                      : "bg-white border border-slate-200 opacity-60 grayscale-[0.5] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
+                      ? isRare 
+                        ? "bg-gradient-to-br from-amber-50 to-white border-2 border-amber-400 shadow-amber-100 scale-[1.05] ring-2 ring-amber-100 ring-offset-2" 
+                        : "bg-white border-2 border-indigo-500 shadow-indigo-100/50 scale-[1.02]" 
+                      : isRare 
+                        ? "bg-white border border-amber-200 opacity-70 grayscale-[0.3] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-amber-400"
+                        : "bg-white border border-slate-200 opacity-60 grayscale-[0.5] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
                   )}
                 >
                   {isOwned && (
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-10"
+                      className={cn(
+                        "absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-10",
+                        isRare ? "bg-amber-500" : "bg-indigo-500"
+                      )}
                     >
-                      ✓
+                      {isRare ? <Star className="w-2.5 h-2.5 fill-current" /> : "✓"}
                     </motion.div>
+                  )}
+
+                  {isRare && !isOwned && (
+                    <div className="absolute top-1 right-1 lg:top-2 lg:right-2 text-amber-300">
+                      <Star className="w-3 h-3 lg:w-4 lg:h-4" />
+                    </div>
                   )}
                   
                   <div className="flex-1 flex items-center justify-center flex-col p-2 lg:p-4">
                     <div className={cn(
                         "text-lg lg:text-xl font-black font-mono transition-colors",
-                        isOwned ? "text-slate-900" : "text-slate-300"
+                        isOwned 
+                          ? isRare ? "text-amber-700" : "text-slate-900" 
+                          : "text-slate-300"
                     )}>
                       {stickerCode}
                     </div>
                     <div className={cn(
-                        "text-[8px] lg:text-[10px] uppercase font-bold mt-1 tracking-tight text-center",
-                        isOwned ? "text-slate-400" : "text-slate-200"
+                        "text-[8px] lg:text-[10px] uppercase font-bold mt-1 tracking-tight text-center flex flex-col items-center gap-0.5",
+                        isOwned 
+                          ? isRare ? "text-amber-500" : "text-slate-400" 
+                          : "text-slate-200"
                     )}>
                       {num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador'}
+                      {isRare && <span className="text-[6px] lg:text-[8px] text-amber-500 font-black">RARE ITEM</span>}
                     </div>
                   </div>
 
                   <div className={cn(
                     "h-1.5 lg:h-2 w-full rounded-b-[6px] transition-colors",
-                    isOwned ? "bg-indigo-500" : "bg-slate-100"
+                    isOwned 
+                      ? isRare ? "bg-amber-400" : "bg-indigo-500" 
+                      : isRare ? "bg-amber-100" : "bg-slate-100"
                   )}></div>
+
+                  {/* Shimmer effect for rare stickers */}
+                  {isRare && isOwned && (
+                    <motion.div
+                      animate={{
+                        x: ['0%', '200%'],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-1/2 -skew-x-12 pointer-events-none"
+                    />
+                  )}
 
                   {/* Hover effect for missing stickers - hidden on mobile for better UX */}
                   {!isOwned && !isMobile && (
-                    <div className="absolute inset-0 bg-indigo-600/0 hover:bg-indigo-600/5 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
-                      <span className="bg-indigo-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Collect</span>
+                    <div className={cn(
+                        "absolute inset-0 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100",
+                        isRare ? "bg-amber-500/10" : "bg-indigo-600/5"
+                    )}>
+                      <span className={cn(
+                        "text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider",
+                        isRare ? "bg-amber-500" : "bg-indigo-600"
+                      )}>Collect</span>
                     </div>
                   )}
                 </button>
@@ -301,6 +345,10 @@ export default function AlbumPage() {
             <div className="flex items-center">
               <div className="w-2.5 h-2.5 bg-white border border-slate-300 rounded-full mr-2"></div> 
               Missing
+            </div>
+            <div className="flex items-center">
+              <div className="w-2.5 h-2.5 bg-amber-500 rounded-full mr-2"></div> 
+              Rare Item
             </div>
           </div>
           
