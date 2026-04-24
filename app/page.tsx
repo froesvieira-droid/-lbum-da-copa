@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info } from 'lucide-react';
+import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X } from 'lucide-react';
 import { TEAMS, type Team } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AlbumPage() {
+  const isMobile = useIsMobile();
   const [owned, setOwned] = useState<Record<string, boolean>>({});
   const [selectedTeamId, setSelectedTeamId] = useState<string>(TEAMS[0].id);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Load state from localStorage
   useEffect(() => {
@@ -71,15 +74,35 @@ export default function AlbumPage() {
   const selectedTeamProgress = getTeamProgress(selectedTeam.shortName);
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden font-sans">
+    <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden font-sans relative">
+      {/* Sidebar Overlay (Mobile) */}
+      <AnimatePresence>
+        {isMobile && isSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-72 bg-slate-900 text-white flex flex-col border-r border-slate-800 shrink-0">
-        <div className="p-6 border-b border-slate-800">
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white flex flex-col border-r border-slate-800 transition-transform duration-300 transform lg:translate-x-0 lg:static shrink-0",
+        isMobile && !isSidebarOpen && "-translate-x-full"
+      )}>
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="text-indigo-500 w-5 h-5" />
             <h1 className="text-lg font-bold tracking-tight uppercase">Album Pro 2026</h1>
           </div>
-          <p className="text-slate-500 text-[10px] mt-1 italic uppercase tracking-wider">Sticker Tracking System v2.0</p>
+          {isMobile && (
+            <button onClick={() => setIsSidebarOpen(false)} className="text-slate-500">
+              <X className="w-6 h-6" />
+            </button>
+          )}
         </div>
 
         <div className="p-4 border-b border-slate-800">
@@ -95,7 +118,7 @@ export default function AlbumPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-2 scrollbar-thin scrollbar-thumb-slate-800/20">
+        <div className="flex-1 overflow-y-auto py-2 scrollbar-none">
           <div className="px-6 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Selections</div>
           <div className="space-y-0.5">
             {filteredTeams.map((team) => {
@@ -105,7 +128,10 @@ export default function AlbumPage() {
               return (
                 <button
                   key={team.id}
-                  onClick={() => setSelectedTeamId(team.id)}
+                  onClick={() => {
+                    setSelectedTeamId(team.id);
+                    if (isMobile) setIsSidebarOpen(false);
+                  }}
                   className={cn(
                     "w-full flex items-center px-6 py-3 transition-colors text-left group",
                     isActive 
@@ -149,9 +175,28 @@ export default function AlbumPage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="h-32 bg-white border-b border-slate-200 flex items-center px-10 shrink-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        {/* Mobile Header / Navbar */}
+        <header className="lg:hidden h-16 bg-white border-b border-slate-200 flex items-center px-4 shrink-0 justify-between">
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 -ml-2 text-slate-600"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{selectedTeam.flag}</span>
+            <span className="font-bold uppercase tracking-tight">{selectedTeam.name}</span>
+          </div>
+          
+          <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-[10px] font-mono font-bold text-indigo-600">
+             {completionPercentage}%
+          </div>
+        </header>
+
+        {/* Desktop Team Header */}
+        <header className="hidden lg:flex h-32 bg-white border-b border-slate-200 items-center px-10 shrink-0">
           <div className="text-5xl mr-6 filter drop-shadow-sm select-none">
             {selectedTeam.flag}
           </div>
@@ -187,8 +232,8 @@ export default function AlbumPage() {
         </header>
 
         {/* Sticker Grid */}
-        <main className="flex-1 overflow-y-auto p-10 bg-slate-50/50">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-10 bg-slate-50/50">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-6">
             {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => {
               const isOwned = owned[`${selectedTeam.shortName}-${num}`];
               const stickerCode = `${selectedTeam.shortName} ${num.toString().padStart(2, '0')}`;
@@ -208,34 +253,34 @@ export default function AlbumPage() {
                     <motion.div 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute top-2 right-2 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[10px] shadow-sm z-10"
+                      className="absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-10"
                     >
                       ✓
                     </motion.div>
                   )}
                   
-                  <div className="flex-1 flex items-center justify-center flex-col p-4">
+                  <div className="flex-1 flex items-center justify-center flex-col p-2 lg:p-4">
                     <div className={cn(
-                        "text-xl font-black font-mono transition-colors",
+                        "text-lg lg:text-xl font-black font-mono transition-colors",
                         isOwned ? "text-slate-900" : "text-slate-300"
                     )}>
                       {stickerCode}
                     </div>
                     <div className={cn(
-                        "text-[10px] uppercase font-bold mt-1 tracking-tight text-center",
+                        "text-[8px] lg:text-[10px] uppercase font-bold mt-1 tracking-tight text-center",
                         isOwned ? "text-slate-400" : "text-slate-200"
                     )}>
-                      {num === 1 ? 'Escudo Oficial' : num === 20 ? 'Foto do Time' : 'Jogador'}
+                      {num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador'}
                     </div>
                   </div>
 
                   <div className={cn(
-                    "h-2 w-full rounded-b-[6px] transition-colors",
+                    "h-1.5 lg:h-2 w-full rounded-b-[6px] transition-colors",
                     isOwned ? "bg-indigo-500" : "bg-slate-100"
                   )}></div>
 
-                  {/* Hover effect for missing stickers */}
-                  {!isOwned && (
+                  {/* Hover effect for missing stickers - hidden on mobile for better UX */}
+                  {!isOwned && !isMobile && (
                     <div className="absolute inset-0 bg-indigo-600/0 hover:bg-indigo-600/5 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
                       <span className="bg-indigo-600 text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Collect</span>
                     </div>
@@ -247,8 +292,8 @@ export default function AlbumPage() {
         </main>
 
         {/* Footer Area */}
-        <footer className="bg-white h-14 border-t border-slate-200 flex items-center px-10 text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0">
-          <div className="flex gap-8">
+        <footer className="bg-white h-auto py-4 lg:h-14 border-t border-slate-200 flex flex-col lg:flex-row items-center px-4 lg:px-10 text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0 gap-4 lg:gap-0">
+          <div className="flex gap-6 w-full lg:w-auto justify-center lg:justify-start">
             <div className="flex items-center">
               <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full mr-2"></div> 
               Collected
@@ -257,23 +302,19 @@ export default function AlbumPage() {
               <div className="w-2.5 h-2.5 bg-white border border-slate-300 rounded-full mr-2"></div> 
               Missing
             </div>
-            <div className="hidden sm:flex items-center">
-              <LayoutGrid className="w-3.5 h-3.5 mr-2 text-slate-400" />
-              {selectedTeam.name} Collection
-            </div>
           </div>
           
-          <div className="ml-auto flex gap-3">
+          <div className="flex flex-col sm:flex-row lg:ml-auto gap-3 w-full lg:w-auto">
             <button 
               onClick={resetAll}
-              className="px-4 py-1.5 bg-white border border-slate-200 rounded text-slate-400 hover:text-red-500 hover:border-red-200 transition-all flex items-center gap-2"
+              className="px-4 py-2 lg:py-1.5 bg-white border border-slate-200 rounded text-slate-400 hover:text-red-500 hover:border-red-200 transition-all flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-3 h-3" />
               Reset System
             </button>
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
-            <div className="px-4 py-1.5 bg-slate-50 border border-slate-200 rounded text-slate-400 select-none">
-              v2.0.4 - Production
+            <div className="hidden lg:block h-6 w-px bg-slate-200 mx-1"></div>
+            <div className="px-4 py-2 lg:py-1.5 bg-slate-50 border border-slate-200 rounded text-slate-400 select-none text-center">
+              v2.0.5 - Mobile Optimized
             </div>
           </div>
         </footer>
@@ -281,3 +322,4 @@ export default function AlbumPage() {
     </div>
   );
 }
+
