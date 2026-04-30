@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star } from 'lucide-react';
+import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star, User, Image as ImageIcon, Download } from 'lucide-react';
 import { TEAMS, type Team } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,6 +52,35 @@ export default function AlbumPage() {
     if (confirm('Tem certeza que deseja resetar todo o seu álbum?')) {
       setOwned({});
     }
+  };
+
+  const exportMissingToCSV = () => {
+    const missing: string[][] = [['Time', 'Codigo', 'Tipo', 'Raridade']];
+    
+    TEAMS.forEach(team => {
+      for (let i = 1; i <= 20; i++) {
+        if (!owned[`${team.shortName}-${i}`]) {
+          const code = `${team.shortName} ${i.toString().padStart(2, '0')}`;
+          const isRare = i === 1 || i === 20;
+          const type = team.shortName === 'FWC' 
+            ? (i === 1 ? 'Troféu' : i === 20 ? 'Mascote' : 'Especial')
+            : (i === 1 ? 'Escudo' : i === 20 ? 'Time' : 'Jogador');
+          
+          missing.push([team.name, code, type, isRare ? 'Rara' : 'Comum']);
+        }
+      }
+    });
+
+    const csvContent = "\uFEFF" + missing.map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `figurinhas_faltantes_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const totalOwnedCount = Object.values(owned).filter(val => val).length;
@@ -242,64 +272,121 @@ export default function AlbumPage() {
               const isRare = isRareSticker(num);
               
               return (
-                <button
+                <motion.button
                   key={num}
+                  layout
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => toggleSticker(selectedTeam.shortName, num)}
                   className={cn(
-                    "aspect-[3/4] rounded-lg shadow-sm relative group flex flex-col transition-all duration-300 text-left cursor-pointer",
+                    "aspect-[3/4] rounded-lg shadow-sm relative group flex flex-col transition-all duration-300 text-left cursor-pointer overflow-hidden",
                     isOwned 
                       ? isRare 
-                        ? "bg-gradient-to-br from-amber-50 to-white border-2 border-amber-400 shadow-amber-100 scale-[1.05] ring-2 ring-amber-100 ring-offset-2" 
+                        ? "bg-gradient-to-br from-amber-50 to-white border-2 border-amber-400 shadow-amber-200/50 scale-[1.02] ring-2 ring-amber-100 ring-offset-1" 
                         : "bg-white border-2 border-indigo-500 shadow-indigo-100/50 scale-[1.02]" 
                       : isRare 
                         ? "bg-white border border-amber-200 opacity-70 grayscale-[0.3] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-amber-400"
                         : "bg-white border border-slate-200 opacity-60 grayscale-[0.5] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
                   )}
                 >
-                  {isOwned && (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className={cn(
-                        "absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-10",
-                        isRare ? "bg-amber-500" : "bg-indigo-500"
-                      )}
-                    >
-                      {isRare ? <Star className="w-2.5 h-2.5 fill-current" /> : "✓"}
-                    </motion.div>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {isOwned && (
+                      <motion.div 
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 45 }}
+                        className={cn(
+                          "absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-30",
+                          isRare ? "bg-amber-500" : "bg-indigo-500"
+                        )}
+                      >
+                        {isRare ? <Star className="w-2.5 h-2.5 fill-current" /> : "✓"}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {isRare && !isOwned && (
-                    <div className="absolute top-1 right-1 lg:top-2 lg:right-2 text-amber-300">
+                    <div className="absolute top-1 right-1 lg:top-2 lg:right-2 text-amber-300 z-10">
                       <Star className="w-3 h-3 lg:w-4 lg:h-4" />
                     </div>
                   )}
                   
-                  <div className="flex-1 flex items-center justify-center flex-col p-2 lg:p-4">
-                    <div className={cn(
-                        "text-lg lg:text-xl font-black font-mono transition-colors",
-                        isOwned 
-                          ? isRare ? "text-amber-700" : "text-slate-900" 
-                          : "text-slate-300"
-                    )}>
-                      {stickerCode}
+                  <div className="flex-1 flex flex-col items-center justify-center p-2 lg:p-4 relative w-full overflow-hidden">
+                    {/* Sticker Image Logic */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <AnimatePresence>
+                        {isOwned ? (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="w-full h-full relative"
+                          >
+                            <Image
+                              src={`https://picsum.photos/seed/${stickerCode}${isRare ? '-gold' : ''}/200/300`}
+                              alt={stickerCode}
+                              fill
+                              className={cn(
+                                "object-cover transition-all duration-700",
+                                isRare ? "brightness-110 contrast-110 saturate-125" : "brightness-95"
+                              )}
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            
+                            {/* Success Flash Effect */}
+                            <motion.div
+                              initial={{ opacity: 1 }}
+                              animate={{ opacity: 0 }}
+                              transition={{ duration: 0.8 }}
+                              className="absolute inset-0 bg-white mix-blend-overlay z-20"
+                            />
+                          </motion.div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center opacity-10">
+                            {num === 1 ? (
+                              <ImageIcon className="w-12 h-12 lg:w-16 lg:h-16 text-slate-400" />
+                            ) : (
+                              <User className="w-12 h-12 lg:w-16 lg:h-16 text-slate-400" />
+                            )}
+                          </div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <div className={cn(
-                        "text-[8px] lg:text-[10px] uppercase font-bold mt-1 tracking-tight text-center flex flex-col items-center gap-0.5",
-                        isOwned 
-                          ? isRare ? "text-amber-500" : "text-slate-400" 
-                          : "text-slate-200"
-                    )}>
-                      {selectedTeam.shortName === 'FWC' 
-                        ? (num === 1 ? 'Troféu' : num === 20 ? 'Mascote' : 'Especial')
-                        : (num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador')
-                      }
-                      {isRare && <span className="text-[6px] lg:text-[8px] text-amber-500 font-black">RARE ITEM</span>}
+
+                    {/* Sticker Label Overlay */}
+                    <div className="relative z-20 mt-auto w-full text-center">
+                      <div className={cn(
+                          "text-lg lg:text-xl font-black font-mono transition-colors drop-shadow-md",
+                          isOwned 
+                            ? "text-white" 
+                            : "text-slate-300"
+                      )}>
+                        {stickerCode}
+                      </div>
+                      <div className={cn(
+                          "text-[8px] lg:text-[10px] uppercase font-bold mt-0.5 tracking-tight text-center flex flex-col items-center gap-0.5",
+                          isOwned 
+                            ? isRare ? "text-amber-300 drop-shadow-sm" : "text-white/80 drop-shadow-sm" 
+                            : "text-slate-200"
+                      )}>
+                        {selectedTeam.shortName === 'FWC' 
+                          ? (num === 1 ? 'Troféu' : num === 20 ? 'Mascote' : 'Especial')
+                          : (num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador')
+                        }
+                        {isRare && (
+                          <motion.span 
+                            initial={{ y: 5, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="text-[6px] lg:text-[8px] text-amber-600 bg-amber-400/90 px-1 rounded-sm font-black shadow-sm"
+                          >
+                            RARE ITEM
+                          </motion.span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <div className={cn(
-                    "h-1.5 lg:h-2 w-full rounded-b-[6px] transition-colors",
+                    "h-1.5 lg:h-2 w-full rounded-b-[6px] transition-colors relative z-20",
                     isOwned 
                       ? isRare ? "bg-amber-400" : "bg-indigo-500" 
                       : isRare ? "bg-amber-100" : "bg-slate-100"
@@ -309,30 +396,31 @@ export default function AlbumPage() {
                   {isRare && isOwned && (
                     <motion.div
                       animate={{
-                        x: ['0%', '200%'],
+                        x: ['-200%', '200%'],
                       }}
                       transition={{
-                        duration: 2,
+                        duration: 3,
                         repeat: Infinity,
                         ease: "linear",
+                        delay: 1
                       }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-1/2 -skew-x-12 pointer-events-none"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-full skew-x-12 pointer-events-none z-10"
                     />
                   )}
 
                   {/* Hover effect for missing stickers - hidden on mobile for better UX */}
                   {!isOwned && !isMobile && (
                     <div className={cn(
-                        "absolute inset-0 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100",
+                        "absolute inset-0 transition-colors rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 z-30",
                         isRare ? "bg-amber-500/10" : "bg-indigo-600/5"
                     )}>
                       <span className={cn(
-                        "text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider",
+                        "text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider shadow-sm",
                         isRare ? "bg-amber-500" : "bg-indigo-600"
                       )}>Collect</span>
                     </div>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -356,6 +444,13 @@ export default function AlbumPage() {
           </div>
           
           <div className="flex flex-col sm:flex-row lg:ml-auto gap-3 w-full lg:w-auto">
+            <button 
+              onClick={exportMissingToCSV}
+              className="px-4 py-2 lg:py-1.5 bg-emerald-600 border border-emerald-500 rounded text-white hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Download className="w-3 h-3" />
+              Exportar Faltantes
+            </button>
             <button 
               onClick={resetAll}
               className="px-4 py-2 lg:py-1.5 bg-white border border-slate-200 rounded text-slate-400 hover:text-red-500 hover:border-red-200 transition-all flex items-center justify-center gap-2"
