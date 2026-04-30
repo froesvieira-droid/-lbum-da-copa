@@ -16,6 +16,7 @@ export default function AlbumPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFooterVisible, setIsFooterVisible] = useState(true);
+  const [selectedSticker, setSelectedSticker] = useState<{ team: Team, num: number } | null>(null);
 
   // Load state from localStorage
   useEffect(() => {
@@ -140,6 +141,17 @@ export default function AlbumPage() {
   const selectedTeamProgress = getTeamProgress(selectedTeam.shortName);
 
   const isRareSticker = (num: number) => num === 1 || num === 20;
+
+  const getStickerType = (teamShortName: string, num: number) => {
+    if (teamShortName === 'FWC') {
+      if (num === 1) return 'Troféu';
+      if (num === 20) return 'Mascote';
+      return 'Especial';
+    }
+    if (num === 1) return 'Escudo';
+    if (num === 20) return 'Time';
+    return 'Jogador';
+  };
 
   return (
     <div className="flex h-screen w-full bg-slate-50 text-slate-900 overflow-hidden font-sans relative">
@@ -321,136 +333,122 @@ export default function AlbumPage() {
                 <motion.button
                   key={num}
                   layout
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => toggleSticker(selectedTeam.shortName, num)}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedSticker({ team: selectedTeam, num })}
                   className={cn(
-                    "aspect-[3/4] rounded-lg shadow-sm relative group flex flex-col transition-all duration-300 text-left cursor-pointer overflow-hidden",
+                    "aspect-[3/4] rounded-sm shadow-sm relative group flex flex-col transition-all duration-500 text-left cursor-pointer overflow-hidden",
                     isOwned 
                       ? isRare 
-                        ? "bg-gradient-to-br from-amber-50 to-white border-2 border-amber-400 shadow-amber-200/50 scale-[1.02] ring-2 ring-amber-100 ring-offset-1" 
-                        : "bg-white border-2 border-indigo-500 shadow-indigo-100/50 scale-[1.02]" 
+                        ? "bg-gradient-to-br from-amber-100 to-white border border-amber-400 shadow-md scale-[1.01] rotate-[0.5deg] z-10" 
+                        : "bg-white border border-slate-300 shadow-sm scale-[1] rotate-[-0.3deg] z-10" 
                       : isRare 
-                        ? "bg-white border border-amber-200 opacity-70 grayscale-[0.3] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-amber-400"
-                        : "bg-white border border-slate-200 opacity-60 grayscale-[0.5] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
+                        ? "bg-slate-50 border border-amber-200/50 opacity-40 grayscale-[0.8] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-amber-400"
+                        : "bg-slate-50 border border-slate-200 opacity-30 grayscale-[1] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
                   )}
                 >
                   <AnimatePresence mode="wait">
                     {isOwned && (
                       <motion.div 
-                        initial={{ scale: 0, rotate: -45 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        exit={{ scale: 0, rotate: 45 }}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
                         className={cn(
-                          "absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 rounded-full flex items-center justify-center text-white text-[7px] lg:text-[9px] shadow-sm z-30",
-                          isRare ? "bg-amber-500" : "bg-indigo-500"
+                          "absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-2.5 h-2.5 lg:w-3.5 lg:h-3.5 rounded-full flex items-center justify-center text-white shadow-inner z-40",
+                          isRare ? "bg-amber-600" : "bg-blue-600"
                         )}
                       >
-                        {isRare ? <Star className="w-2 h-2 fill-current" /> : "✓"}
+                        {isRare ? <Star className="w-1.5 h-1.5 fill-current" /> : <div className="w-1 h-1 bg-white rounded-full" />}
                       </motion.div>
                     )}
                   </AnimatePresence>
 
-                  {isRare && !isOwned && (
-                    <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 text-amber-300 z-10">
-                      <Star className="w-2 h-2 lg:w-3 lg:h-3" />
-                    </div>
-                  )}
-                  
-                  <div className="flex-1 flex flex-col items-center justify-center p-1 lg:p-1.5 relative w-full overflow-hidden">
+                  <div className="flex-1 flex flex-col items-center justify-center p-0.5 lg:p-1 relative w-full overflow-hidden">
                     {/* Sticker Image Logic */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-0.5">
                       <AnimatePresence>
                         {isOwned ? (
                           <motion.div 
-                            initial={{ opacity: 0, scale: 1.1 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full h-full relative"
+                            initial={{ opacity: 0, filter: 'blur(4px)' }}
+                            animate={{ opacity: 1, filter: 'blur(0px)' }}
+                            className="w-full h-full relative border-[1.5px] border-white shadow-sm overflow-hidden rounded-[1px]"
                           >
                             <Image
                               src={`https://picsum.photos/seed/${stickerCode}${isRare ? '-gold' : ''}/150/200`}
                               alt={stickerCode}
                               fill
                               className={cn(
-                                "object-cover transition-all duration-700",
-                                isRare ? "brightness-110 contrast-110 saturate-125" : "brightness-95"
+                                "object-cover transition-all duration-1000",
+                                isRare ? "brightness-110 contrast-125 saturate-150" : "brightness-105"
                               )}
                               referrerPolicy="no-referrer"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                            {/* Panini-style vignette */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60" />
+                            
+                            {/* Holographic Finish for Rare */}
+                            {isRare && (
+                              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-200/20 to-transparent mix-blend-overlay animate-pulse" />
+                            )}
                             
                             {/* Success Flash Effect */}
                             <motion.div
-                              initial={{ opacity: 1 }}
+                              initial={{ opacity: 0.8 }}
                               animate={{ opacity: 0 }}
-                              transition={{ duration: 0.8 }}
-                              className="absolute inset-0 bg-white mix-blend-overlay z-20"
+                              transition={{ duration: 1 }}
+                              className="absolute inset-0 bg-white z-20 pointer-events-none"
                             />
                           </motion.div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center opacity-10">
-                            {num === 1 ? (
-                              <ImageIcon className="w-6 h-6 lg:w-8 lg:h-8 text-slate-400" />
-                            ) : (
-                              <User className="w-6 h-6 lg:w-8 lg:h-8 text-slate-400" />
-                            )}
+                          <div className="flex flex-col items-center justify-center opacity-5">
+                            <span className="font-mono text-[10px] font-bold">{stickerCode}</span>
                           </div>
                         )}
                       </AnimatePresence>
                     </div>
 
                     {/* Sticker Label Overlay */}
-                    <div className="relative z-20 mt-auto w-full text-center">
+                    <div className="relative z-30 mt-auto w-full px-1 py-0.5">
                       <div className={cn(
-                          "text-[9px] lg:text-[11px] font-black font-mono transition-colors drop-shadow-md",
-                          isOwned 
-                            ? "text-white" 
-                            : "text-slate-300"
+                          "text-[8px] lg:text-[10px] font-black font-mono transition-colors tracking-tighter leading-none flex items-center justify-between",
+                          isOwned ? "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]" : "text-slate-300"
                       )}>
-                        {stickerCode}
+                        <span>{stickerCode}</span>
+                        {isOwned && isRare && <Star className="w-2 h-2 text-amber-400 fill-amber-400" />}
                       </div>
                       <div className={cn(
-                          "text-[6px] lg:text-[7px] uppercase font-bold mt-0 lg:mt-0.5 tracking-tight text-center flex flex-col items-center gap-0 lg:gap-0.5",
+                          "text-[5px] lg:text-[6px] uppercase font-bold tracking-widest mt-0.5 leading-none transition-opacity",
                           isOwned 
-                            ? isRare ? "text-amber-300 drop-shadow-sm" : "text-white/80 drop-shadow-sm" 
-                            : "text-slate-200"
+                            ? "text-white/90 drop-shadow-[0_1px_0.5px_rgba(0,0,0,0.5)]" 
+                            : "text-slate-400 opacity-50"
                       )}>
                         {selectedTeam.shortName === 'FWC' 
                           ? (num === 1 ? 'Troféu' : num === 20 ? 'Mascote' : 'Especial')
                           : (num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador')
                         }
-                        {isRare && (
-                          <motion.span 
-                            initial={{ y: 5, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="text-[4px] lg:text-[5px] text-amber-600 bg-amber-400/90 px-0.5 rounded-sm font-black shadow-sm"
-                          >
-                            RARE
-                          </motion.span>
-                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className={cn(
-                    "h-1 lg:h-1.5 w-full rounded-b-[6px] transition-colors relative z-20",
+                    "h-0.5 lg:h-1 w-full transition-colors relative z-20",
                     isOwned 
-                      ? isRare ? "bg-amber-400" : "bg-indigo-500" 
-                      : isRare ? "bg-amber-100" : "bg-slate-100"
+                      ? isRare ? "bg-amber-500 shadow-[0_-1px_2px_rgba(245,158,11,0.5)]" : "bg-blue-600 shadow-[0_-1px_2px_rgba(37,99,235,0.3)]" 
+                      : "bg-slate-200/50"
                   )}></div>
 
                   {/* Shimmer effect for rare stickers */}
                   {isRare && isOwned && (
                     <motion.div
                       animate={{
-                        x: ['-200%', '200%'],
+                        x: ['-250%', '250%'],
                       }}
                       transition={{
-                        duration: 3,
+                        duration: 2.5,
                         repeat: Infinity,
-                        ease: "linear",
-                        delay: 1
+                        ease: "easeInOut",
+                        delay: 0.5
                       }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-full skew-x-12 pointer-events-none z-10"
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent w-full skew-x-25 pointer-events-none z-30 opacity-70"
                     />
                   )}
 
@@ -531,6 +529,131 @@ export default function AlbumPage() {
             </div>
           </div>
         </motion.footer>
+        )}
+      </AnimatePresence>
+
+      {/* Sticker Detail Modal */}
+      <AnimatePresence>
+        {selectedSticker && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedSticker(null)}
+              className="absolute inset-0 bg-slate-900/80 backdrop-blur-md"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{selectedSticker.team.flag}</span>
+                  <div>
+                    <h3 className="font-bold text-slate-900 leading-none">{selectedSticker.team.name}</h3>
+                    <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
+                      FIGURINHA #{selectedSticker.num.toString().padStart(2, '0')}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedSticker(null)}
+                  className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Sticker Preview */}
+              <div className="p-8 flex flex-col items-center justify-center bg-gradient-to-b from-white to-slate-50">
+                <motion.div 
+                  layoutId={`sticker-${selectedSticker.team.shortName}-${selectedSticker.num}`}
+                  className={cn(
+                    "w-48 aspect-[3/4] rounded-sm shadow-xl relative overflow-hidden border-[6px] border-white ring-1 ring-slate-200",
+                    isRareSticker(selectedSticker.num) ? "rotate-[2deg]" : "rotate-[-1deg]"
+                  )}
+                >
+                  <Image
+                    src={`https://picsum.photos/seed/${selectedSticker.team.shortName}-${selectedSticker.num}${isRareSticker(selectedSticker.num) ? '-gold' : ''}/400/600`}
+                    alt={selectedSticker.team.shortName}
+                    fill
+                    className={cn(
+                      "object-cover",
+                      !owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`] && "grayscale opacity-20"
+                    )}
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  
+                  {isRareSticker(selectedSticker.num) && owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`] && (
+                    <motion.div
+                      animate={{ x: ['-200%', '200%'] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-full skew-x-12 z-10"
+                    />
+                  )}
+
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <div className="text-xl font-black font-mono leading-none">
+                      {selectedSticker.team.shortName} {selectedSticker.num.toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-[8px] font-bold uppercase tracking-widest mt-1 opacity-80">
+                      {getStickerType(selectedSticker.team.shortName, selectedSticker.num)}
+                    </div>
+                  </div>
+
+                  {isRareSticker(selectedSticker.num) && (
+                    <div className="absolute top-2 right-2 p-1 bg-amber-500 rounded-full shadow-lg">
+                      <Star className="w-3 h-3 text-white fill-current" />
+                    </div>
+                  )}
+                </motion.div>
+
+                <div className="mt-8 text-center">
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                    isRareSticker(selectedSticker.num) 
+                      ? "bg-amber-50 text-amber-600 border-amber-200" 
+                      : "bg-blue-50 text-blue-600 border-blue-200"
+                  )}>
+                    {isRareSticker(selectedSticker.num) ? "Figurinha Rara (Ouro)" : "Figurinha Regular"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="p-6 bg-white border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    toggleSticker(selectedSticker.team.shortName, selectedSticker.num);
+                  }}
+                  className={cn(
+                    "w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 active:scale-[0.98]",
+                    owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`]
+                      ? "bg-slate-100 text-red-500 hover:bg-red-50 border border-slate-200 hover:border-red-100"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200"
+                  )}
+                >
+                  {owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`] ? (
+                    <>
+                      <X className="w-5 h-5" />
+                      Remover da Coleção
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Marcar como Adquirida
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
