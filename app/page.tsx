@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star, User, Image as ImageIcon, Download } from 'lucide-react';
+import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star, User, Image as ImageIcon, Download, Upload } from 'lucide-react';
 import { TEAMS, type Team } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -81,6 +81,41 @@ export default function AlbumPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n');
+      const newOwned = { ...owned };
+
+      // Skip header
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // Match specific codes like "BRA 01" or CSV columns
+        // We look for the "Codigo" column which is usually the second one
+        const parts = line.split(',');
+        const code = parts.length > 1 ? parts[1].trim() : line;
+        
+        // Expected format "XXX 00"
+        const match = code.match(/([A-Z]{3})\s+(\d{2})/);
+        if (match) {
+          const shortName = match[1];
+          const num = parseInt(match[2], 10);
+          newOwned[`${shortName}-${num}`] = true;
+        }
+      }
+
+      setOwned(newOwned);
+      alert('Importação concluída com sucesso!');
+    };
+    reader.readAsText(file);
   };
 
   const totalOwnedCount = Object.values(owned).filter(val => val).length;
@@ -444,6 +479,20 @@ export default function AlbumPage() {
           </div>
           
           <div className="flex flex-col sm:flex-row lg:ml-auto gap-3 w-full lg:w-auto">
+            <input 
+              type="file" 
+              id="csv-import" 
+              accept=".csv" 
+              className="hidden" 
+              onChange={handleImportCSV} 
+            />
+            <button 
+              onClick={() => document.getElementById('csv-import')?.click()}
+              className="px-4 py-2 lg:py-1.5 bg-indigo-600 border border-indigo-500 rounded text-white hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Upload className="w-3 h-3" />
+              Importar CSV
+            </button>
             <button 
               onClick={exportMissingToCSV}
               className="px-4 py-2 lg:py-1.5 bg-emerald-600 border border-emerald-500 rounded text-white hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm"
