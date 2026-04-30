@@ -290,7 +290,10 @@ export default function AlbumPage() {
                           ? isRare ? "text-amber-500" : "text-slate-400" 
                           : "text-slate-200"
                     )}>
-                      {num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador'}
+                      {selectedTeam.shortName === 'FWC' 
+                        ? (num === 1 ? 'Troféu' : num === 20 ? 'Mascote' : 'Especial')
+                        : (num === 1 ? 'Escudo' : num === 20 ? 'Time' : 'Jogador')
+                      }
                       {isRare && <span className="text-[6px] lg:text-[8px] text-amber-500 font-black">RARE ITEM</span>}
                     </div>
                   </div>
