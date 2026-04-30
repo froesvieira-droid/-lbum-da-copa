@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star, User, Image as ImageIcon, Download, Upload } from 'lucide-react';
+import { Trophy, CheckCircle2, Search, RotateCcw, LayoutGrid, Info, Menu, X, Star, User, Image as ImageIcon, Download, Upload, Eye, EyeOff } from 'lucide-react';
 import { TEAMS, type Team } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -15,6 +15,7 @@ export default function AlbumPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isFooterVisible, setIsFooterVisible] = useState(true);
 
   // Load state from localStorage
   useEffect(() => {
@@ -260,6 +261,14 @@ export default function AlbumPage() {
           <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-[10px] font-mono font-bold text-indigo-600">
              {completionPercentage}%
           </div>
+          
+          <button 
+            onClick={() => setIsFooterVisible(!isFooterVisible)}
+            className="p-2 ml-1 text-slate-400 hover:text-indigo-600 transition-colors"
+            title={isFooterVisible ? "Ocultar Painel Inferior" : "Mostrar Painel Inferior"}
+          >
+            {isFooterVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
         </header>
 
         {/* Desktop Team Header */}
@@ -289,18 +298,20 @@ export default function AlbumPage() {
               </div>
             </div>
             <div className="h-10 w-px bg-slate-200 self-center"></div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Remaining</div>
-              <div className="text-2xl font-mono font-bold text-red-500">
-                {(20 - selectedTeamProgress).toString().padStart(2, '0')}
-              </div>
-            </div>
+            <button 
+              onClick={() => setIsFooterVisible(!isFooterVisible)}
+              className="flex flex-col items-center justify-center px-3 hover:bg-slate-50 rounded-md transition-colors text-slate-400 hover:text-indigo-600"
+              title={isFooterVisible ? "Ocultar Painel Inferior" : "Mostrar Painel Inferior"}
+            >
+              <div className="text-[10px] uppercase font-bold tracking-widest mb-1">Painel</div>
+              {isFooterVisible ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
         </header>
 
         {/* Sticker Grid */}
-        <main className="flex-1 overflow-y-auto p-4 lg:p-10 bg-slate-50/50">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 lg:gap-6">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-slate-50/50">
+          <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2 lg:gap-2.5">
             {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => {
               const isOwned = owned[`${selectedTeam.shortName}-${num}`];
               const stickerCode = `${selectedTeam.shortName} ${num.toString().padStart(2, '0')}`;
@@ -330,22 +341,22 @@ export default function AlbumPage() {
                         animate={{ scale: 1, rotate: 0 }}
                         exit={{ scale: 0, rotate: 45 }}
                         className={cn(
-                          "absolute top-1 right-1 lg:top-2 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center text-white text-[8px] lg:text-[10px] shadow-sm z-30",
+                          "absolute top-0.5 right-0.5 lg:top-1 lg:right-1 w-3 h-3 lg:w-4 lg:h-4 rounded-full flex items-center justify-center text-white text-[7px] lg:text-[9px] shadow-sm z-30",
                           isRare ? "bg-amber-500" : "bg-indigo-500"
                         )}
                       >
-                        {isRare ? <Star className="w-2.5 h-2.5 fill-current" /> : "✓"}
+                        {isRare ? <Star className="w-2 h-2 fill-current" /> : "✓"}
                       </motion.div>
                     )}
                   </AnimatePresence>
 
                   {isRare && !isOwned && (
-                    <div className="absolute top-1 right-1 lg:top-2 lg:right-2 text-amber-300 z-10">
-                      <Star className="w-3 h-3 lg:w-4 lg:h-4" />
+                    <div className="absolute top-0.5 right-0.5 lg:top-1 lg:right-1 text-amber-300 z-10">
+                      <Star className="w-2 h-2 lg:w-3 lg:h-3" />
                     </div>
                   )}
                   
-                  <div className="flex-1 flex flex-col items-center justify-center p-2 lg:p-4 relative w-full overflow-hidden">
+                  <div className="flex-1 flex flex-col items-center justify-center p-1 lg:p-1.5 relative w-full overflow-hidden">
                     {/* Sticker Image Logic */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <AnimatePresence>
@@ -356,7 +367,7 @@ export default function AlbumPage() {
                             className="w-full h-full relative"
                           >
                             <Image
-                              src={`https://picsum.photos/seed/${stickerCode}${isRare ? '-gold' : ''}/200/300`}
+                              src={`https://picsum.photos/seed/${stickerCode}${isRare ? '-gold' : ''}/150/200`}
                               alt={stickerCode}
                               fill
                               className={cn(
@@ -365,7 +376,7 @@ export default function AlbumPage() {
                               )}
                               referrerPolicy="no-referrer"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                             
                             {/* Success Flash Effect */}
                             <motion.div
@@ -378,9 +389,9 @@ export default function AlbumPage() {
                         ) : (
                           <div className="flex flex-col items-center justify-center opacity-10">
                             {num === 1 ? (
-                              <ImageIcon className="w-12 h-12 lg:w-16 lg:h-16 text-slate-400" />
+                              <ImageIcon className="w-6 h-6 lg:w-8 lg:h-8 text-slate-400" />
                             ) : (
-                              <User className="w-12 h-12 lg:w-16 lg:h-16 text-slate-400" />
+                              <User className="w-6 h-6 lg:w-8 lg:h-8 text-slate-400" />
                             )}
                           </div>
                         )}
@@ -390,7 +401,7 @@ export default function AlbumPage() {
                     {/* Sticker Label Overlay */}
                     <div className="relative z-20 mt-auto w-full text-center">
                       <div className={cn(
-                          "text-lg lg:text-xl font-black font-mono transition-colors drop-shadow-md",
+                          "text-[9px] lg:text-[11px] font-black font-mono transition-colors drop-shadow-md",
                           isOwned 
                             ? "text-white" 
                             : "text-slate-300"
@@ -398,7 +409,7 @@ export default function AlbumPage() {
                         {stickerCode}
                       </div>
                       <div className={cn(
-                          "text-[8px] lg:text-[10px] uppercase font-bold mt-0.5 tracking-tight text-center flex flex-col items-center gap-0.5",
+                          "text-[6px] lg:text-[7px] uppercase font-bold mt-0 lg:mt-0.5 tracking-tight text-center flex flex-col items-center gap-0 lg:gap-0.5",
                           isOwned 
                             ? isRare ? "text-amber-300 drop-shadow-sm" : "text-white/80 drop-shadow-sm" 
                             : "text-slate-200"
@@ -411,9 +422,9 @@ export default function AlbumPage() {
                           <motion.span 
                             initial={{ y: 5, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
-                            className="text-[6px] lg:text-[8px] text-amber-600 bg-amber-400/90 px-1 rounded-sm font-black shadow-sm"
+                            className="text-[4px] lg:text-[5px] text-amber-600 bg-amber-400/90 px-0.5 rounded-sm font-black shadow-sm"
                           >
-                            RARE ITEM
+                            RARE
                           </motion.span>
                         )}
                       </div>
@@ -421,7 +432,7 @@ export default function AlbumPage() {
                   </div>
 
                   <div className={cn(
-                    "h-1.5 lg:h-2 w-full rounded-b-[6px] transition-colors relative z-20",
+                    "h-1 lg:h-1.5 w-full rounded-b-[6px] transition-colors relative z-20",
                     isOwned 
                       ? isRare ? "bg-amber-400" : "bg-indigo-500" 
                       : isRare ? "bg-amber-100" : "bg-slate-100"
@@ -462,8 +473,15 @@ export default function AlbumPage() {
         </main>
 
         {/* Footer Area */}
-        <footer className="bg-white h-auto py-4 lg:h-14 border-t border-slate-200 flex flex-col lg:flex-row items-center px-4 lg:px-10 text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0 gap-4 lg:gap-0">
-          <div className="flex gap-6 w-full lg:w-auto justify-center lg:justify-start">
+        <AnimatePresence>
+          {isFooterVisible && (
+            <motion.footer 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="bg-white border-t border-slate-200 flex flex-col lg:flex-row items-center px-4 lg:px-10 text-[10px] uppercase tracking-widest text-slate-500 font-bold shrink-0 gap-4 lg:gap-0 overflow-hidden py-4 lg:py-0 lg:h-14"
+            >
+              <div className="flex gap-6 w-full lg:w-auto justify-center lg:justify-start">
             <div className="flex items-center">
               <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full mr-2"></div> 
               Collected
@@ -512,9 +530,11 @@ export default function AlbumPage() {
               v2.0.5 - Mobile Optimized
             </div>
           </div>
-        </footer>
-      </div>
+        </motion.footer>
+        )}
+      </AnimatePresence>
     </div>
-  );
+  </div>
+);
 }
 
