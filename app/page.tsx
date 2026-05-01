@@ -222,7 +222,7 @@ export default function AlbumPage() {
                   <span className="w-6 h-4 rounded-sm mr-3 flex items-center justify-center text-[8px] font-bold bg-slate-800 group-hover:bg-slate-700">
                     {team.flag}
                   </span>
-                  <span className="text-sm font-medium truncate">{team.name}</span>
+                  <span className="text-sm font-medium truncate">{team.shortName}</span>
                   <span className={cn(
                     "ml-auto text-[10px] font-mono",
                     isActive ? "text-indigo-400" : "text-slate-600"
@@ -267,7 +267,7 @@ export default function AlbumPage() {
           
           <div className="flex items-center gap-2">
             <span className="text-2xl">{selectedTeam.flag}</span>
-            <span className="font-bold uppercase tracking-tight">{selectedTeam.name}</span>
+            <span className="font-bold uppercase tracking-tight">{selectedTeam.shortName}</span>
           </div>
           
           <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-[10px] font-mono font-bold text-indigo-600">
@@ -291,11 +291,8 @@ export default function AlbumPage() {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
               <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase truncate">
-                {selectedTeam.name}
-              </h2>
-              <span className="px-2 py-1 bg-slate-100 rounded text-slate-500 font-mono text-sm border border-slate-200 shrink-0">
                 {selectedTeam.shortName}
-              </span>
+              </h2>
             </div>
             <p className="text-slate-500 text-sm mt-1 flex items-center gap-2 truncate">
               <Info className="w-3.5 h-3.5" />
@@ -538,7 +535,7 @@ export default function AlbumPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{selectedSticker.team.flag}</span>
                   <div>
-                    <h3 className="font-bold text-slate-900 leading-none">{selectedSticker.team.name}</h3>
+                    <h3 className="font-bold text-slate-900 leading-none">{selectedSticker.team.shortName}</h3>
                     <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
                       FIGURINHA #{selectedSticker.num.toString().padStart(2, '0')}
                     </p>
