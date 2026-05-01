@@ -267,7 +267,10 @@ export default function AlbumPage() {
           
           <div className="flex items-center gap-2">
             <span className="text-2xl">{selectedTeam.flag}</span>
-            <span className="font-bold uppercase tracking-tight">{selectedTeam.shortName}</span>
+            <div className="flex flex-col">
+              <span className="font-bold uppercase tracking-tight leading-none">{selectedTeam.shortName}</span>
+              <span className="text-[8px] text-slate-500 font-semibold truncate max-w-[100px]">{selectedTeam.name}</span>
+            </div>
           </div>
           
           <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-full text-[10px] font-mono font-bold text-indigo-600">
@@ -290,9 +293,14 @@ export default function AlbumPage() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-3">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase truncate">
-                {selectedTeam.shortName}
-              </h2>
+              <div className="flex flex-col">
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight uppercase truncate leading-none">
+                  {selectedTeam.shortName}
+                </h2>
+                <span className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+                  {selectedTeam.name}
+                </span>
+              </div>
             </div>
             <p className="text-slate-500 text-sm mt-1 flex items-center gap-2 truncate">
               <Info className="w-3.5 h-3.5" />
@@ -534,8 +542,9 @@ export default function AlbumPage() {
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">{selectedSticker.team.flag}</span>
-                  <div>
+                  <div className="flex flex-col">
                     <h3 className="font-bold text-slate-900 leading-none">{selectedSticker.team.shortName}</h3>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">{selectedSticker.team.name}</span>
                     <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mt-1">
                       FIGURINHA #{selectedSticker.num.toString().padStart(2, '0')}
                     </p>
