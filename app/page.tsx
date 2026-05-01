@@ -331,16 +331,35 @@ export default function AlbumPage() {
               
               return (
                 <motion.button
-                  key={num}
+                  key={`${selectedTeam.id}-${num}`}
                   layout
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedSticker({ team: selectedTeam, num })}
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: isOwned ? (isRare ? 1.01 : 1) : 1, 
+                    y: 0,
+                    rotate: isOwned ? (isRare ? 0.5 : -0.3) : 0
+                  }}
+                  transition={{ 
+                    duration: 0.3, 
+                    delay: num * 0.02,
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20
+                  }}
+                  whileHover={{ scale: 1.05, zIndex: 10 }}
+                  whileTap={{ scale: 0.95 }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    toggleSticker(selectedTeam.shortName, num);
+                  }}
+                  title="Clique duplo para marcar/desmarcar"
                   className={cn(
                     "aspect-[3/4] rounded-sm shadow-sm relative group flex flex-col transition-all duration-500 text-left cursor-pointer overflow-hidden",
                     isOwned 
                       ? isRare 
-                        ? "bg-gradient-to-br from-amber-100 to-white border border-amber-400 shadow-md scale-[1.01] rotate-[0.5deg] z-10" 
-                        : "bg-white border border-slate-300 shadow-sm scale-[1] rotate-[-0.3deg] z-10" 
+                        ? "bg-gradient-to-br from-amber-100 to-white border border-amber-400 shadow-md z-10" 
+                        : "bg-white border border-slate-300 shadow-sm z-10" 
                       : isRare 
                         ? "bg-slate-50 border border-amber-200/50 opacity-40 grayscale-[0.8] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-amber-400"
                         : "bg-slate-50 border border-slate-200 opacity-30 grayscale-[1] border-dashed hover:opacity-100 hover:grayscale-0 hover:border-indigo-300"
@@ -363,47 +382,11 @@ export default function AlbumPage() {
                   </AnimatePresence>
 
                   <div className="flex-1 flex flex-col items-center justify-center p-0.5 lg:p-1 relative w-full overflow-hidden">
-                    {/* Sticker Image Logic */}
+                    {/* Sticker Image logic removed for optimization */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-0.5">
-                      <AnimatePresence>
-                        {isOwned ? (
-                          <motion.div 
-                            initial={{ opacity: 0, filter: 'blur(4px)' }}
-                            animate={{ opacity: 1, filter: 'blur(0px)' }}
-                            className="w-full h-full relative border-[1.5px] border-white shadow-sm overflow-hidden rounded-[1px]"
-                          >
-                            <Image
-                              src={`https://picsum.photos/seed/${stickerCode}${isRare ? '-gold' : ''}/150/200`}
-                              alt={stickerCode}
-                              fill
-                              className={cn(
-                                "object-cover transition-all duration-1000",
-                                isRare ? "brightness-110 contrast-125 saturate-150" : "brightness-105"
-                              )}
-                              referrerPolicy="no-referrer"
-                            />
-                            {/* Panini-style vignette */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60" />
-                            
-                            {/* Holographic Finish for Rare */}
-                            {isRare && (
-                              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-200/20 to-transparent mix-blend-overlay animate-pulse" />
-                            )}
-                            
-                            {/* Success Flash Effect */}
-                            <motion.div
-                              initial={{ opacity: 0.8 }}
-                              animate={{ opacity: 0 }}
-                              transition={{ duration: 1 }}
-                              className="absolute inset-0 bg-white z-20 pointer-events-none"
-                            />
-                          </motion.div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center opacity-5">
-                            <span className="font-mono text-[10px] font-bold">{stickerCode}</span>
-                          </div>
-                        )}
-                      </AnimatePresence>
+                      <div className="flex flex-col items-center justify-center opacity-10">
+                        <span className="font-mono text-[10px] font-bold">{stickerCode}</span>
+                      </div>
                     </div>
 
                     {/* Sticker Label Overlay */}
@@ -569,26 +552,20 @@ export default function AlbumPage() {
                 </button>
               </div>
 
-              {/* Sticker Preview */}
+              {/* Sticker Preview (Image removed) */}
               <div className="p-8 flex flex-col items-center justify-center bg-gradient-to-b from-white to-slate-50">
                 <motion.div 
                   layoutId={`sticker-${selectedSticker.team.shortName}-${selectedSticker.num}`}
                   className={cn(
-                    "w-48 aspect-[3/4] rounded-sm shadow-xl relative overflow-hidden border-[6px] border-white ring-1 ring-slate-200",
+                    "w-48 h-64 rounded-sm shadow-xl relative overflow-hidden border-[6px] border-white ring-1 ring-slate-200 bg-slate-100 flex items-center justify-center",
                     isRareSticker(selectedSticker.num) ? "rotate-[2deg]" : "rotate-[-1deg]"
                   )}
                 >
-                  <Image
-                    src={`https://picsum.photos/seed/${selectedSticker.team.shortName}-${selectedSticker.num}${isRareSticker(selectedSticker.num) ? '-gold' : ''}/400/600`}
-                    alt={selectedSticker.team.shortName}
-                    fill
-                    className={cn(
-                      "object-cover",
-                      !owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`] && "grayscale opacity-20"
-                    )}
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="text-4xl font-black text-slate-800 opacity-20 select-none">
+                    {selectedSticker.team.shortName}
+                  </div>
+                  
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
                   
                   {isRareSticker(selectedSticker.num) && owned[`${selectedSticker.team.shortName}-${selectedSticker.num}`] && (
                     <motion.div
@@ -598,11 +575,11 @@ export default function AlbumPage() {
                     />
                   )}
 
-                  <div className="absolute bottom-3 left-3 text-white">
+                  <div className="absolute bottom-3 left-3 text-slate-900">
                     <div className="text-xl font-black font-mono leading-none">
                       {selectedSticker.team.shortName} {selectedSticker.num.toString().padStart(2, '0')}
                     </div>
-                    <div className="text-[8px] font-bold uppercase tracking-widest mt-1 opacity-80">
+                    <div className="text-[8px] font-bold uppercase tracking-widest mt-1 opacity-60">
                       {getStickerType(selectedSticker.team.shortName, selectedSticker.num)}
                     </div>
                   </div>
